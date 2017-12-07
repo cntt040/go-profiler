@@ -2,10 +2,11 @@ package profiler
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"gopkg.in/alexcesaro/statsd.v2"
-	"os"
+	statsd "gopkg.in/alexcesaro/statsd.v2"
 
 	"strings"
 )
@@ -68,8 +69,9 @@ func ProfilerWithConfig(config ProfilerConfig) echo.MiddlewareFunc {
 			if err = next(c); err != nil {
 				c.Error(err)
 			}
-
-			s := strings.ToLower(fmt.Sprintf("response.%s.%s.%s.%d", config.Service, req.Method, c.Path(), res.Status))
+			// waiting for this https://github.com/influxdata/telegraf/pull/3514 to be merged
+			path := strings.Replace(c.Path(), ":", "#", -1)
+			s := strings.ToLower(fmt.Sprintf("response.%s.%s.%s.%d", config.Service, req.Method, path, res.Status))
 			if os.Getenv("LOG_LEVEL") == "debug" {
 				fmt.Println(s)
 			}
